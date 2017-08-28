@@ -1,0 +1,69 @@
+-module(dfa).
+
+-include_lib("eunit/include/eunit.hrl").
+
+-behaviour(gen_statem).
+
+-export([start/0, stop/0, input/1, get_state/0, is_accept/1]).
+
+-export([terminate/3, code_change/4, init/1, callback_mode/0]).
+
+{{ dfa.export_state_functions() }}
+
+-define(SERVER, ?MODULE).
+
+%%%%%%%%%%%%%%%%%%%%%%%%% APIs %%%%%%%%%%%%%%%%%%%%%%%%%%%
+is_accept(State) ->
+    Ac_set = sets:from_list([{{ dfa.get_ac_state() }}]),
+    sets:is_element(State, Ac_set).
+
+start() ->
+    gen_statem:start({local, ?SERVER}, ?MODULE, [], []).
+
+stop() ->
+    gen_statem:stop(?SERVER).
+
+get_state() ->
+    get_current_state().
+
+input(C) ->
+    gen_statem:call(?SERVER, C).
+
+input_string([]) -> ok;
+input_string([C|String]) ->
+    input(C),
+    input_string(String).
+
+%%%%%%%%%%%%%%%%%%%%%%% Callbacks %%%%%%%%%%%%%%%%%%%%%%%%
+
+terminate(_Reason, _State, _Data) ->
+    void.
+
+code_change(_Vsn, State, Data, _Extra) ->
+    {ok, State, Data}.
+
+init([]) ->
+    State = {{ dfa.get_start_state() }},
+    {ok, State, []}.
+
+callback_mode() -> state_functions.
+
+%%%%%%%%%%%%%%%%%%%%%% state callbacks %%%%%%%%%%%%%%%%%%%%%
+
+{{ dfa.state_functions_code() }}
+
+%%%%%%%%%%%%%%%%%%%%% Internal Helpers %%%%%%%%%%%%%%%%%%%%%
+get_current_state() ->
+    St = sys:get_status(?SERVER),
+    {_, {State, _}} = lists:nth(1,
+    		                element(2,
+				        lists:nth(3,
+					          lists:nth(5,
+						            element(4,
+							            St))))),
+    State.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%Unit Test%%%%%%%%%%%%%%%%%%%%%%%%%
+{{ dfa.test_code() }}
+
+{{ dfa.user_test() }}
