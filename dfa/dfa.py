@@ -55,7 +55,7 @@ class DFA:
         if states.get("type") == "fix":
             return deepcopy(states.get("content"))
         if states.get("type") == "range":
-            a, b = map(int, states.get("content").strip().split())
+            a, b = map(int, states.get("content").strip().split(","))
             return range(a, b+1)
         raise DfaError("states type not supported")
 

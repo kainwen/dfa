@@ -73,6 +73,7 @@ loop([{Input_string, Result}|Pairs]) ->
 	Result ->
 	    loop(Pairs);
 	_ ->
+	    io:format("~p~n", [{Input_string, Result}]),
 	    false
     end.
 
