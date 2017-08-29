@@ -1,4 +1,4 @@
--module(dfa224b).
+-module(dfa224c).
 
 -include_lib("eunit/include/eunit.hrl").
 
@@ -57,15 +57,15 @@ state_A({call, From}, 1, Data) ->
 
 
 state_B({call, From}, 0, Data) ->
-    {next_state, state_C, Data, [{reply, From, ok}]};
+    {next_state, state_B, Data, [{reply, From, ok}]};
 state_B({call, From}, 1, Data) ->
-    {next_state, state_A, Data, [{reply, From, ok}]}.
+    {next_state, state_C, Data, [{reply, From, ok}]}.
 
 
 state_C({call, From}, 0, Data) ->
-    {next_state, state_D, Data, [{reply, From, ok}]};
+    {next_state, state_B, Data, [{reply, From, ok}]};
 state_C({call, From}, 1, Data) ->
-    {next_state, state_A, Data, [{reply, From, ok}]}.
+    {next_state, state_D, Data, [{reply, From, ok}]}.
 
 
 state_D({call, From}, 0, Data) ->
@@ -112,6 +112,6 @@ bin_to_string(Blist) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%Unit Test%%%%%%%%%%%%%%%%%%%%%%%%%
 dfa_test() ->
     Test_inputs = lists:foldl(fun (E, Acc) -> E ++ Acc end, [], [gen_test_input(L) || L <- lists:seq(0, 11)]),
-    Test_results = [string:str(bin_to_string(Ti), "000") > 0 || Ti <- Test_inputs],
+    Test_results = [string:str(bin_to_string(Ti), "011") > 0 || Ti <- Test_inputs],
     Test_pairs = lists:zip(Test_inputs, Test_results),
     ?assert(loop(Test_pairs)).

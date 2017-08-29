@@ -90,4 +90,4 @@ bin_to_string(Blist) ->
 %    Test_inputs = lists:foldl(fun (E, Acc) -> E ++ Acc end, [], [gen_test_input(L) || L <- lists:seq(0, 11)]),
 %    Test_results = [string:str(bin_to_string(Ti), "000") || Ti <- Test_inputs],
 %    Test_pairs = lists:zip(Test_inputs, Test_results),
-%    loop(Test_pairs).
+%    ?assert(loop(Test_pairs)).

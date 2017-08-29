@@ -111,4 +111,4 @@ dfa_test() ->
                     (lists:nth(length(Ti) - 1, Ti) =:= 0)
 		    || Ti <- Test_inputs],
     Test_pairs = lists:zip(Test_inputs, Test_results),
-    loop(Test_pairs).
+    ?assert(loop(Test_pairs)).
