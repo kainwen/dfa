@@ -19,6 +19,16 @@ def render(context):
         loader=jinja2.FileSystemLoader(path)
     ).get_template(filename).render(context)
 
+def load_delta_from_file(path):
+    graph = {}
+    with open(path) as f:
+        for line in f:
+            from_s, input_symbol, to_s = line.strip().split(",")
+            graph[(from_s, int(input_symbol))] =  to_s
+    def _delta(s, i):
+        return graph.get((s, i))
+    return _delta
+
 
 class DfaError(Exception):
 
@@ -31,14 +41,13 @@ class DfaError(Exception):
 
 class DFA:
 
-    def __init__(self, states, start_state, accept_states,
-                 alphabet, delta, user_tests):
+    def __init__(self, module, states, start_state, accept_states, alphabet, delta):
+        self.module = module
         self.states = self.parse_states(states)
         self.start_state = start_state
         self.accept_states = self.parse_states(accept_states)
         self.alphabet = self.parse_alphabet(alphabet)
         self.delta = delta
-        self.user_tests = deepcopy(user_tests)
 
     def parse_states(self, states):
         if not isinstance(states, dict):
@@ -99,42 +108,6 @@ class DFA:
         for i in input_list:
             q = self.delta(q, i)
         return q
-
-    def test_code(self):
-        code = StringIO()
-        print("dfa_test() ->", file=code)
-        for round in range(500):
-            n = randint(0, 2**20)
-            input_list = list(bin(n)[2:])
-            print("    start(),", file=code)
-            print("    input_string([%s]),"
-                  % ",".join(input_list),
-                  file=code)
-            print("    State%s = get_state()," % round, file=code)
-            result = str(self.extend_delta(map(int, input_list)) in
-                         self.accept_states).lower()
-            print("    ?assert(is_accept(State%s) =:= %s),"
-                  % (round, result),
-                  file=code)
-            print("    stop(),", file=code)
-        print("    ok.", file=code)
-        return code.getvalue()
-
-    def user_test(self):
-        code = StringIO()
-        print("user_test() ->", file=code)
-        for i, (input_string, result) in enumerate(self.user_tests):
-            print("    start(),", file=code)
-            print("    input_string([%s]),"
-                  % ",".join(list(input_string)),
-                  file=code)
-            print("    State%s = get_state()," % i, file=code)
-            print("    ?assert(is_accept(State%s) =:= %s),"
-                  % (i, result),
-                  file=code)
-            print("    stop(),", file=code)
-        print("    ok.", file=code)
-        return code.getvalue()            
 
     def gen_erl_statem(self):
         code = render({"dfa": self})

@@ -1,4 +1,4 @@
--module({{ dfa.module }}).
+-module(dfa224a).
 
 -include_lib("eunit/include/eunit.hrl").
 
@@ -8,13 +8,13 @@
 
 -export([terminate/3, code_change/4, init/1, callback_mode/0]).
 
-{{ dfa.export_state_functions() }}
+-export([state_A/3,state_B/3,state_C/3]).
 
 -define(SERVER, ?MODULE).
 
 %%%%%%%%%%%%%%%%%%%%%%%%% APIs %%%%%%%%%%%%%%%%%%%%%%%%%%%
 is_accept(State) ->
-    Ac_set = sets:from_list([{{ dfa.get_ac_state() }}]),
+    Ac_set = sets:from_list([state_C]),
     sets:is_element(State, Ac_set).
 
 start() ->
@@ -43,14 +43,32 @@ code_change(_Vsn, State, Data, _Extra) ->
     {ok, State, Data}.
 
 init([]) ->
-    State = {{ dfa.get_start_state() }},
+    State = state_A,
     {ok, State, []}.
 
 callback_mode() -> state_functions.
 
 %%%%%%%%%%%%%%%%%%%%%% state callbacks %%%%%%%%%%%%%%%%%%%%%
 
-{{ dfa.state_functions_code() }}
+state_A({call, From}, 0, Data) ->
+    {next_state, state_B, Data, [{reply, From, ok}]};
+state_A({call, From}, 1, Data) ->
+    {next_state, state_A, Data, [{reply, From, ok}]}.
+
+
+state_B({call, From}, 0, Data) ->
+    {next_state, state_C, Data, [{reply, From, ok}]};
+state_B({call, From}, 1, Data) ->
+    {next_state, state_A, Data, [{reply, From, ok}]}.
+
+
+state_C({call, From}, 0, Data) ->
+    {next_state, state_C, Data, [{reply, From, ok}]};
+state_C({call, From}, 1, Data) ->
+    {next_state, state_A, Data, [{reply, From, ok}]}.
+
+
+
 
 %%%%%%%%%%%%%%%%%%%%% Internal Helpers %%%%%%%%%%%%%%%%%%%%%
 get_current_state() ->
@@ -86,8 +104,11 @@ gen_test_input(L) when L > 0 ->
 bin_to_string(Blist) ->
     [B+$0 || B <- Blist].    
 %%%%%%%%%%%%%%%%%%%%%%%%%%Unit Test%%%%%%%%%%%%%%%%%%%%%%%%%
-%dfa_test() ->
-%    Test_inputs = lists:foldl(fun (E, Acc) -> E ++ Acc end, [], [gen_test_input(L) || L <- lists:seq(0, 11)]),
-%    Test_results = [string:str(bin_to_string(Ti), "000") || Ti <- Test_inputs],
-%    Test_pairs = lists:zip(Test_inputs, Test_results),
-%    loop(Test_pairs).
+dfa_test() ->
+    Test_inputs = lists:foldl(fun (E, Acc) -> E ++ Acc end, [], [gen_test_input(L) || L <- lists:seq(0, 11)]),
+    Test_results = [(length(Ti) >= 2) andalso
+		    (lists:nth(length(Ti), Ti) =:= 0) andalso
+                    (lists:nth(length(Ti) - 1, Ti) =:= 0)
+		    || Ti <- Test_inputs],
+    Test_pairs = lists:zip(Test_inputs, Test_results),
+    loop(Test_pairs).
